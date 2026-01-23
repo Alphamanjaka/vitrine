@@ -6,10 +6,11 @@ use App\Models\Supplier;
 use Illuminate\Http\Request;
 use App\Services\SupplierService;
 use App\Http\Requests\StoreSupplierRequest;
+
 class SupplierController extends Controller
 {
     protected $supplierService;
-    public function __construct( SupplierService $supplierService)
+    public function __construct(SupplierService $supplierService)
     {
         $this->supplierService = $supplierService;
     }
@@ -39,8 +40,14 @@ class SupplierController extends Controller
     {
         // validate request
         $validatedData = $request->validated();
-        $this->supplierService->createSupplier($validatedData);
-        return redirect()->route('suppliers.index');
+        try {
+            $this->supplierService->createSupplier($validatedData);
+            return redirect()->route('suppliers.index')
+                ->with('success', 'Fournisseur ajouté avec succès.');
+        } catch (\Exception $th) {
+            return back()->withInput()
+                ->with('error', "Erreur lors de l'ajout : " . $th->getMessage());
+        }
     }
 
     /**

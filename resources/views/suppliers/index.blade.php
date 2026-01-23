@@ -4,19 +4,24 @@
 
 @section('content')
     <a href="{{ route('suppliers.create') }}" class="btn btn-primary mb-3">+ Ajouter</a>
+    <div class="card mb-4 shadow-sm">
+        <div class="card-body">
+            <form action="{{ url('/suppliers') }}" method="GET" class="row g-3">
+                <div class="col-md-4">
+                    <input type="text" name="search" class="form-control" placeholder="Rechercher un fournisseur..."
+                        value="{{ request('search') }}">
+                </div>
+
+                <div class="col-md-3">
+                    <button type="submit" class="btn btn-primary"><i class="bi bi-search"></i> Filtrer</button>
+                    <a href="{{ url('/suppliers') }}" class="btn btn-outline-secondary" rel="noopener"
+                        target="_blank">Réinitialiser</a>
+                </div>
+            </form>
+        </div>
+    </div>
     <div class="container">
         <h1>Liste des Fournisseurs</h1>
-        @if (session('success'))
-            <div class="alert alert-success">
-                {{ session('success') }}
-            </div>
-        @endif
-
-        @if (session('error'))
-            <div class="alert alert-danger">
-                {{ session('error') }}
-            </div>
-        @endif
         <table class="table table-bordered">
             <thead>
                 <tr>
@@ -33,8 +38,8 @@
                     <tr>
                         <td>{{ $supplier->id }}</td>
                         <td>{{ $supplier->name }}</td>
-                        <td>{{ $supplier->contact_email }}</td>
-                        <td>{{ $supplier->phone_number }}</td>
+                        <td>{{ $supplier->email }}</td>
+                        <td>{{ $supplier->phone }}</td>
                         <td>{{ $supplier->address }}</td>
                         <td>
                             <a href="{{ route('suppliers.show', $supplier->id) }}" class="btn btn-info btn-sm">Voir</a>

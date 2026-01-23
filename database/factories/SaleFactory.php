@@ -18,6 +18,7 @@ class SaleFactory extends Factory
     {
         return [
             // Define default values for sale attributes
+            
         ];
     }
 }

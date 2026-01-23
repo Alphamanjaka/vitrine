@@ -11,7 +11,7 @@ class SupplierService
         return Supplier::all();
     }
 
-    public function createSupplier(array $data)
+    public function createSupplier($data)
     {
         return Supplier::create($data);
     }
