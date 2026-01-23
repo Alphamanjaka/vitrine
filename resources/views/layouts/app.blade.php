@@ -56,19 +56,22 @@
                     <i class="bi bi-speedometer2"></i> Dashboard
                 </a>
                 <a href="/products" class="{{ request()->is('products*') ? 'active-link' : '' }}">
-                    <i class="bi bi-cart"></i> Produits
+                    <i class="bi bi-box-seam"></i> Products
                 </a>
                 <a href="/categories" class="{{ request()->is('categories*') ? 'active-link' : '' }}">
-                    <i class="bi bi-tags"></i> Catégories
+                    <i class="bi bi-tags"></i> Categories
                 </a>
                 <a href="/suppliers" class="{{ request()->is('suppliers*') ? 'active-link' : '' }}">
-                    <i class="bi bi-truck"></i> Fournisseurs
+                    <i class="bi bi-truck"></i> Suppliers
                 </a>
                 <a href="/movements" class="{{ request()->is('movements*') ? 'active-link' : '' }}">
-                    <i class="bi bi-arrow-left-right"></i> Mouvements
+                    <i class="bi bi-arrow-left-right"></i> Movements
                 </a>
                 <a href="/sales" class="{{ request()->is('sales*') ? 'active-link' : '' }}">
-                    <i class="bi bi-currency-dollar"></i> Ventes
+                    <i class="bi bi-currency-dollar"></i> Sales
+                </a>
+                <a href="/purchases" class="{{ request()->is('purchases*') ? 'active-link' : '' }}">
+                    <i class="bi bi-bag-plus"></i> Purchases
                 </a>
             </nav>
 
@@ -82,10 +85,12 @@
                         @php $notifications = auth()->user()->unreadNotifications; @endphp
                         <ul class="nav">
                             <li class="nav-item dropdown">
-                                <a class="nav-link text-dark position-relative" href="#" data-bs-toggle="dropdown" aria-expanded="false">
+                                <a class="nav-link text-dark position-relative" href="#" data-bs-toggle="dropdown"
+                                    aria-expanded="false">
                                     <i class="bi bi-bell fs-5"></i>
-                                    @if($notifications->count() > 0)
-                                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                                    @if ($notifications->count() > 0)
+                                        <span
+                                            class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
                                             {{ $notifications->count() }}
                                             <span class="visually-hidden">notifications</span>
                                         </span>
@@ -94,13 +99,20 @@
                                 <ul class="dropdown-menu dropdown-menu-end shadow" style="min-width: 250px;">
                                     @forelse($notifications as $notification)
                                         <li>
-                                            <a class="dropdown-item" href="{{ route('products.index', ['search' => $notification->data['product_name'] ?? '']) }}">
-                                                <strong class="text-danger"><i class="bi bi-exclamation-circle"></i> Attention !</strong><br>
+                                            <a class="dropdown-item"
+                                                href="{{ route('products.index', ['search' => $notification->data['product_name'] ?? '']) }}">
+                                                <strong class="text-danger"><i class="bi bi-exclamation-circle"></i>
+                                                    Attention !</strong><br>
                                                 {{ $notification->data['product_name'] ?? 'Produit' }}
-                                                <small class="text-muted d-block">(Stock : {{ $notification->data['current_stock'] ?? 0 }})</small>
+                                                <small class="text-muted d-block">(Stock :
+                                                    {{ $notification->data['current_stock'] ?? 0 }})</small>
                                             </a>
                                         </li>
-                                        @if(!$loop->last) <li><hr class="dropdown-divider"></li> @endif
+                                        @if (!$loop->last)
+                                            <li>
+                                                <hr class="dropdown-divider">
+                                            </li>
+                                        @endif
                                     @empty
                                         <li><span class="dropdown-item text-muted">Aucune alerte</span></li>
                                     @endforelse

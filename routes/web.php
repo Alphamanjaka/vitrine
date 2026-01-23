@@ -15,3 +15,5 @@ Route::resource('movements', \App\Http\Controllers\StockMovementController::clas
 Route::resource('sales', SaleController::class);
 Route::get('/sales/{sale}/pdf', [SaleController::class, 'exportPdf'])->name('sales.pdf');
 Route::get('/dashboard', [\App\Http\Controllers\DashboardController::class, 'index'])->name('dashboard');
+Route::resource('suppliers', \App\Http\Controllers\SupplierController::class);
+Route::resource('purchases', \App\Http\Controllers\PurchaseController::class);

@@ -4,15 +4,23 @@ namespace App\Http\Controllers;
 
 use App\Models\Supplier;
 use Illuminate\Http\Request;
-
+use App\Services\SupplierService;
+use App\Http\Requests\StoreSupplierRequest;
 class SupplierController extends Controller
 {
+    protected $supplierService;
+    public function __construct( SupplierService $supplierService)
+    {
+        $this->supplierService = $supplierService;
+    }
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
-        //
+        // get all suppliers
+        $suppliers = $this->supplierService->getAllSuppliers();
+        return view('suppliers.index', compact('suppliers'));
     }
 
     /**
@@ -20,15 +28,19 @@ class SupplierController extends Controller
      */
     public function create()
     {
-        //
+        // process to show form for creating a supplier
+        return view('suppliers.create');
     }
 
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(StoreSupplierRequest $request)
     {
-        //
+        // validate request
+        $validatedData = $request->validated();
+        $this->supplierService->createSupplier($validatedData);
+        return redirect()->route('suppliers.index');
     }
 
     /**
