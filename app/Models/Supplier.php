@@ -1,0 +1,19 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+use \Illuminate\Database\Eloquent\Factories\HasFactory;
+
+class Supplier extends Model
+{
+    use HasFactory;  // Uncomment if you want to use factories for Supplier model
+    //
+    protected $table = "suppliers";
+    protected $fillable = [
+        'name',
+        'contact_email',
+        'phone_number',
+        'address',
+    ];
+}
