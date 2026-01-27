@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('purchases', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('supplier_id')->constrained('suppliers')->onDelete('cascade'); // reference to suppliers table
             $table->string('reference')->unique();
             $table->decimal('total_amount', 10, 2);
             $table->decimal('discount', 10, 2)->default(0);

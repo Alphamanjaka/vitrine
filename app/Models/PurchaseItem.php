@@ -2,10 +2,13 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Testing\Fluent\Concerns\Has;
 
 class PurchaseItem extends Model
 {
+    use HasFactory;
     // define fillable fields
     protected $fillable = [
         'purchase_id',

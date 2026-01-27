@@ -17,8 +17,11 @@ class SaleFactory extends Factory
     public function definition(): array
     {
         return [
-            // Define default values for sale attributes
-            
+            'reference' => 'SALE-' . $this->faker->unique()->numerify('########'),
+            'total_brut' => 0, // Sera calculé dynamiquement dans le Seeder
+            'discount' => 0,
+            'total_net' => 0,
+            'created_at' => $this->faker->dateTimeBetween('-1 year', 'now'),
         ];
     }
 }

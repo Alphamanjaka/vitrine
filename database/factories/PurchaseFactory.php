@@ -16,8 +16,16 @@ class PurchaseFactory extends Factory
      */
     public function definition(): array
     {
+        $total = $this->faker->randomFloat(2, 500, 10000);
+        $discount = $this->faker->randomFloat(2, 0, 100);
+
         return [
-            //
+            'supplier_id' => \App\Models\Supplier::factory(),
+            'reference' => 'PUR-' . $this->faker->unique()->numerify('########'),
+            'total_amount' => $total,
+            'discount' => $discount,
+            'total_net' => $total - $discount,
+            'created_at' => $this->faker->dateTimeBetween('-1 year', 'now'),
         ];
     }
 }
