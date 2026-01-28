@@ -47,11 +47,6 @@ Route::middleware('auth')->group(function () {
     });
 
     // Routes accessibles aux deux profils
-    Route::resource('products', ProductController::class);
-    Route::resource('categories', CategoryController::class);
     Route::resource('sales', SaleController::class);
     Route::get('/sales/{sale}/pdf', [SaleController::class, 'exportPdf'])->name('sales.pdf');
-    Route::resource('suppliers', SupplierController::class);
-    Route::resource('purchases', PurchaseController::class);
-    Route::resource('movements', StockMovementController::class);
 });

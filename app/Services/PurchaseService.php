@@ -19,23 +19,31 @@ class PurchaseService
     {
         return DB::transaction(function () use ($supplierId, $items) {
             $totalCost = 0;
+            $totalAmount = 0;
 
             // 1. Créer l'achat
             $purchase = Purchase::create([
                 'reference' => 'PUR-' . now()->format('YmdHis'),
                 'supplier_id' => $supplierId,
-                'total_cost' => 0 // On mettra à jour après
+                'total_cost' => 0, // On mettra à jour après
+                'total_amount' => 0, // Initialisation
+                'total_net' => 0,
+                'discount' => 0
             ]);
 
             foreach ($items as $item) {
                 $subtotal = $item['quantity'] * $item['unit_cost'];
                 $totalCost += $subtotal;
+                $subtotal = $item['quantity'] * $item['unit_price'];
+                $totalAmount += $subtotal;
 
                 // 2. Créer la ligne d'achat
                 $purchase->items()->create([
                     'product_id' => $item['product_id'],
                     'quantity' => $item['quantity'],
                     'unit_cost' => $item['unit_cost'],
+                    'unit_price' => $item['unit_price'],
+                    'subtotal' => $subtotal,
                 ]);
 
                 // 3. AUGMENTER le stock via StockService
@@ -47,6 +55,10 @@ class PurchaseService
             }
 
             $purchase->update(['total_cost' => $totalCost]);
+            $purchase->update([
+                'total_amount' => $totalAmount,
+                'total_net' => $totalAmount // Pas de remise gérée ici pour l'instant
+            ]);
             return $purchase;
         });
     }
@@ -74,10 +86,13 @@ class PurchaseService
     {
         return [
             'totalCost' => Purchase::sum('total_cost'),
+            'totalCost' => Purchase::sum('total_net'),
             'totalPurchases' => Purchase::count(),
         ];
     }
     public function     updatePurchase($data)
+
+    public function updatePurchase($data)
     {
         $purchase = Purchase::findOrFail($data['id']);
         $purchase->update($data);
