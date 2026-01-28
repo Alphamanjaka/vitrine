@@ -2,11 +2,37 @@
 
 @section('title', 'Ajouter une nouvelle catégorie')
 @section('content')
-<div class="row justify-content-center">
     <a href="{{ route('categories.create') }}" class="btn btn-primary mb-3">Ajouter une catégorie</a>
-    <div class="col-md-8">
-        <div class="card shadow-sm">
-            <table class="table table-striped">
+    <div class="card mb-4 shadow-sm">
+        <div class="card-body">
+            <form action="{{ url('/categories') }}" method="GET" class="row g-3">
+                <div class="col-md-4">
+                    <input type="text" name="search" class="form-control" placeholder="Rechercher une catégorie..."
+                        value="{{ request('search') }}">
+                </div>
+
+                <div class="col-md-3">
+                    <select name="category" class="form-select">
+                        <option value="">Toutes les catégories</option>
+                        @foreach ($categories as $cat)
+                            <option value="{{ $cat->id }}" {{ request('category') == $cat->id ? 'selected' : '' }}>
+                                {{ $cat->name }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <div class="col-md-3">
+                    <button type="submit" class="btn btn-primary"><i class="bi bi-search"></i> Filtrer</button>
+                    <a href="{{ url('/categories') }}" class="btn btn-outline-secondary" rel="noopener"
+                        target="_blank">Réinitialiser</a>
+                </div>
+            </form>
+        </div>
+    </div>
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <table class="table table-hover">
                 <thead class="table-dark">
                     <tr>
                         <th scope="col">ID</th>
@@ -36,5 +62,4 @@
             </table>
         </div>
     </div>
-</div>
 @endsection
