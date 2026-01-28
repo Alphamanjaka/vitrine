@@ -34,8 +34,8 @@ COPY . .
 RUN composer install --optimize-autoloader --no-interaction --no-dev
 
 # 6. Copie des configurations pour Nginx et du script de démarrage
-COPY docker/prod/nginx.conf /etc/nginx/sites-available/default
-COPY docker/prod/start.sh /usr/local/bin/start.sh
+COPY nginx.conf /etc/nginx/sites-available/default
+COPY start.sh /usr/local/bin/start.sh
 RUN chmod +x /usr/local/bin/start.sh
 
 # 7. Définition des permissions pour Laravel
