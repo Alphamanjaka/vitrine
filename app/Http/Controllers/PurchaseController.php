@@ -3,28 +3,39 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StorePurchaseRequest;
-use App\Models\Purchase;
+use App\Services\PurchaseService;
+use App\Services\SupplierService;
+use App\Services\ProductService;
 use Illuminate\Http\Request;
-use App\models\Product;
+
 class PurchaseController extends Controller
 {
     protected $purchaseService;
     protected $supplierService;
-    public function __construct(\App\Services\PurchaseService $purchaseService, \App\Services\SupplierService $supplierService,)
-    {
+    protected $productService;
+
+    public function __construct(
+        PurchaseService $purchaseService,
+        SupplierService $supplierService,
+        ProductService $productService
+    ) {
         $this->purchaseService = $purchaseService;
         $this->supplierService = $supplierService;
+        $this->productService = $productService;
     }
+
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
-        // process to show all purchases
-        $purchases = $this->purchaseService->getAllPurchases();
-        $totalPurchases = $this->purchaseService->getTotalPurchases();
-        $totalDiscounts = $this->purchaseService->getTotalDiscounts();
-        return view('purchases.index',compact('purchases','totalPurchases','totalDiscounts'));
+        $purchases = $this->purchaseService->getAllPurchases(15);
+        $stats = $this->purchaseService->getPurchaseStatistics();
+
+        return view('purchases.index', array_merge(
+            compact('purchases'),
+            $stats
+        ));
     }
 
     /**
@@ -32,10 +43,9 @@ class PurchaseController extends Controller
      */
     public function create()
     {
-        // process to show form for creating a purchase
-        $products = Product::where('quantity_stock', '>', 0)->get();
+        $products = $this->productService->getAvailableProducts();
         $suppliers = $this->supplierService->getAllSuppliers();
-        return view('purchases.create',compact('products', 'suppliers'));
+        return view('purchases.create', compact('products', 'suppliers'));
     }
 
     /**
@@ -43,21 +53,17 @@ class PurchaseController extends Controller
      */
     public function store(StorePurchaseRequest $request)
     {
-        // process to store a new purchase
-        // Validate the request data
         $data = $request->validated();
 
         try {
-            // Process the purchase and update stock
             $purchase = $this->purchaseService->processPurchase(
                 $data['supplier_id'],
                 $data['products']
             );
-            // Redirect with success message
+
             return redirect()->route('purchases.index')
                 ->with('success', "L'achat {$purchase->reference} a été enregistré. Le stock a été mis à jour.");
         } catch (\Exception $e) {
-            // Handle exceptions and redirect back with error message
             return back()->withInput()->withErrors(['error' => $e->getMessage()]);
         }
     }
@@ -65,35 +71,40 @@ class PurchaseController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Purchase $purchase)
+    public function show($id)
     {
-        $purchase->load(['supplier', 'items.product']);
+        $purchase = $this->purchaseService->getPurchaseById($id);
         return view('purchases.show', compact('purchase'));
     }
 
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(Purchase $purchase)
+    public function edit($id)
     {
-        $products = Product::where('quantity_stock', '>', 0)->get();
-        return view('purchases.edit', compact('purchase', 'products'));
+        $purchase = $this->purchaseService->getPurchaseById($id);
+        $products = $this->productService->getAllProducts();
+        $suppliers = $this->supplierService->getAllSuppliers();
+        return view('purchases.edit', compact('purchase', 'products', 'suppliers'));
+    }
+
+
+
+    /**
+     * Remove the specified resource from storage.
+     */
+    public function destroy($id)
+    {
+        // Delete logic can be added to PurchaseService if needed
+        return back()->with('info', 'Delete not fully implemented yet.');
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Purchase $purchase)
+    public function update(Request $request)
     {
         $this->purchaseService->updatePurchase($request->validated());
         return redirect()->route('purchases.index')->with('success', 'Purchase updated successfully.');
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(Purchase $purchase)
-    {
-        //
     }
 }

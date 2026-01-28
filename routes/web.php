@@ -2,18 +2,56 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ProductController;
-use \App\Http\Controllers\SaleController;
-Route::get('/', function () {
-    return view('welcome');
-});
-use App\Models\Product;
-use Termwind\Components\Raw;
+use App\Http\Controllers\SaleController;
+use App\Http\Controllers\AuthController;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\StockMovementController;
+use App\Http\Controllers\SupplierController;
+use App\Http\Controllers\PurchaseController;
 
-Route::resource('products', ProductController::class);
-Route::resource('categories', \App\Http\Controllers\CategoryController::class);
-Route::resource('movements', \App\Http\Controllers\StockMovementController::class);
-Route::resource('sales', SaleController::class);
-Route::get('/sales/{sale}/pdf', [SaleController::class, 'exportPdf'])->name('sales.pdf');
-Route::get('/dashboard', [\App\Http\Controllers\DashboardController::class, 'index'])->name('dashboard');
-Route::resource('suppliers', \App\Http\Controllers\SupplierController::class);
-Route::resource('purchases', \App\Http\Controllers\PurchaseController::class);
+// Routes d'authentification (publiques)
+Route::middleware('guest')->group(function () {
+    Route::get('/login', [AuthController::class, 'showLoginPage'])->name('login');
+    Route::post('/login', [AuthController::class, 'login'])->name('auth.login');
+    Route::get('/register', [AuthController::class, 'showRegisterPage'])->name('register');
+    Route::post('/register', [AuthController::class, 'register'])->name('auth.register');
+});
+
+// Redirection de la page d'accueil vers le login ou dashboard
+Route::get('/', function () {
+    return auth()->check() ? redirect()->route('dashboard') : redirect()->route('login');
+})->name('home');
+
+// Logout (protégée)
+Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth')->name('logout');
+
+// Routes protégées par authentification
+Route::middleware('auth')->group(function () {
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
+    // Routes Back Office (contrôle accès)
+    Route::middleware('ensure.back.office')->prefix('admin')->name('admin.')->group(function () {
+        Route::get('/dashboard', [DashboardController::class, 'backOffice'])->name('dashboard');
+        Route::resource('products', ProductController::class);
+        Route::resource('categories', CategoryController::class);
+        Route::resource('movements', StockMovementController::class);
+        Route::resource('suppliers', SupplierController::class);
+        Route::resource('purchases', PurchaseController::class);
+    });
+
+    // Routes Front Office
+    Route::middleware('ensure.front.office')->prefix('sales')->name('sales.')->group(function () {
+        Route::get('/dashboard', [DashboardController::class, 'frontOffice'])->name('dashboard');
+        Route::resource('', SaleController::class);
+    });
+
+    // Routes accessibles aux deux profils
+    Route::resource('products', ProductController::class);
+    Route::resource('categories', CategoryController::class);
+    Route::resource('sales', SaleController::class);
+    Route::get('/sales/{sale}/pdf', [SaleController::class, 'exportPdf'])->name('sales.pdf');
+    Route::resource('suppliers', SupplierController::class);
+    Route::resource('purchases', PurchaseController::class);
+    Route::resource('movements', StockMovementController::class);
+});

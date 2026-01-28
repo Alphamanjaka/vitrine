@@ -1,103 +1,94 @@
 @extends('layouts.app')
 
-@section('title', 'Tableau de Bord')
-
+@section('title', 'Sélection du Profil')
 @section('content')
-    <div class="row mb-4">
-        <div class="col-md-3 mb-3">
-            <div class="card shadow-sm text-center h-100">
-                <div class="card-body">
-                    <h6 class="card-subtitle mb-2 text-muted">Ventes Aujourd'hui</h6>
-                    <p class="card-text fs-4 fw-bold">{{ number_format($salesToday, 2, ',', ' ') }} €</p>
+    <div class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-md-10">
+                <div class="text-center mb-5">
+                    <h1 class="mb-2">Bienvenue, {{ auth()->user()->name }} 👋</h1>
+                    <p class="text-muted fs-5">Veuillez sélectionner votre profil de travail</p>
                 </div>
-            </div>
-        </div>
-        <div class="col-md-3 mb-3">
-            <div class="card shadow-sm text-center h-100">
-                <div class="card-body">
-                    <h6 class="card-subtitle mb-2 text-muted">Ventes ce Mois-ci</h6>
-                    <p class="card-text fs-4 fw-bold">{{ number_format($salesThisMonth, 2, ',', ' ') }} €</p>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3 mb-3">
-            <div class="card shadow-sm text-center h-100">
-                <div class="card-body">
-                    <h6 class="card-subtitle mb-2 text-muted">Produit Favori</h6>
-                    @if ($mostSoldProduct && $mostSoldProduct->product)
-                        <p class="card-text fs-5 fw-bold" title="{{ $mostSoldProduct->product->name }}">
-                            {{ \Illuminate\Support\Str::limit($mostSoldProduct->product->name, 20) }}</p>
-                        <small>Vendu {{ $mostSoldProduct->total_quantity }} fois</small>
-                    @else
-                        <p class="card-text fs-5 fw-bold">N/A</p>
+
+                @if ($message = Session::get('error'))
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <i class="fas fa-exclamation-circle"></i> {{ $message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                @endif
+
+                <div class="row">
+                    @if ($canAccessFrontOffice)
+                        <div class="col-md-6 mb-4">
+                            <a href="{{ route('sales.dashboard') }}"
+                                class="card text-decoration-none h-100 shadow border-0 hover-card"
+                                style="border-left: 5px solid #667eea;">
+                                <div class="card-body text-center py-5">
+                                    <div class="mb-3">
+                                        <i class="fas fa-shopping-cart fa-4x text-primary"
+                                            style="color: #667eea !important;"></i>
+                                    </div>
+                                    <h5 class="card-title fw-bold">Front Office</h5>
+                                    <p class="card-text text-muted">Gestion des ventes et des commandes</p>
+                                    <div class="mt-3">
+                                        <span class="badge" style="background: #667eea;">Créer Ventes</span>
+                                        <span class="badge" style="background: #764ba2;">Consulter Stock</span>
+                                    </div>
+                                    <div class="mt-3">
+                                        <small class="text-muted">Accès limité • Vendeur</small>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                    @endif
+
+                    @if ($canAccessBackOffice)
+                        <div class="col-md-6 mb-4">
+                            <a href="{{ route('admin.dashboard') }}"
+                                class="card text-decoration-none h-100 shadow border-0 hover-card"
+                                style="border-left: 5px solid #dc3545;">
+                                <div class="card-body text-center py-5">
+                                    <div class="mb-3">
+                                        <i class="fas fa-cogs fa-4x text-danger"></i>
+                                    </div>
+                                    <h5 class="card-title fw-bold">Back Office</h5>
+                                    <p class="card-text text-muted">Contrôle total des produits et inventaire</p>
+                                    <div class="mt-3">
+                                        <span class="badge bg-danger">Produits</span>
+                                        <span class="badge bg-warning text-dark">Inventaire</span>
+                                    </div>
+                                    <div class="mt-3">
+                                        <small class="text-muted">Accès complet • Administrateur</small>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
                     @endif
                 </div>
-            </div>
-        </div>
-        <div class="col-md-3 mb-3">
-            <div class="card shadow-sm text-center h-100">
-                <div class="card-body">
-                    <h6 class="card-subtitle mb-2 text-muted">Produit Moins Vendu</h6>
-                    @if ($leastSoldProduct && $leastSoldProduct->product)
-                        <p class="card-text fs-5 fw-bold" title="{{ $leastSoldProduct->product->name }}">
-                            {{ \Illuminate\Support\Str::limit($leastSoldProduct->product->name, 20) }}</p>
-                        <small>Vendu {{ $leastSoldProduct->total_quantity }} fois</small>
-                    @else
-                        <p class="card-text fs-5 fw-bold">N/A</p>
-                    @endif
-                </div>
+
+                @if (!$canAccessFrontOffice && !$canAccessBackOffice)
+                    <div class="alert alert-warning" role="alert">
+                        <i class="fas fa-exclamation-triangle"></i> <strong>Accès limité :</strong> Votre profil n'a accès à
+                        aucun module. Veuillez contacter un administrateur.
+                    </div>
+                @endif
             </div>
         </div>
     </div>
 
-    <div class="card shadow-sm">
-        <div class="card-header bg-white d-flex justify-content-between align-items-center">
-            <h5 class="mb-0">Évolution du Chiffre d'Affaires</h5>
-            <div class="btn-group">
-                <a href="?period=7days"
-                    class="btn btn-sm btn-outline-primary {{ $period == '7days' ? 'active' : '' }}">Cette semaine</a>
-                <a href="?period=1month" class="btn btn-sm btn-outline-primary {{ $period == '1month' ? 'active' : '' }}">4
-                    semaines</a>
-                <a href="?period=1year" class="btn btn-sm btn-outline-primary {{ $period == '1year' ? 'active' : '' }}">1
-                    An</a>
-                <a href="?period=by_product"
-                    class="btn btn-sm btn-outline-primary {{ $period == 'by_product' ? 'active' : '' }}">Par produit</a>
-            </div>
-        </div>
-        <div class="card-body">
-            <canvas id="salesChart" height="100"></canvas>
-        </div>
-    </div>
+    <style>
+        .hover-card {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
 
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        .hover-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2) !important;
+        }
 
-    <script>
-        const ctx = document.getElementById('salesChart').getContext('2d');
-        new Chart(ctx, {
-            type: 'line',
-            type: {!! json_encode($chartType ?? 'line') !!},
-            data: {
-                labels: {!! json_encode($labels) !!},
-                datasets: [{
-                    label: 'Ventes (€)',
-                    label: {!! json_encode($chartLabel ?? 'Ventes (€)') !!},
-                    data: {!! json_encode($values) !!},
-                    borderColor: '#0d6efd',
-                    backgroundColor: 'rgba(13, 110, 253, 0.1)',
-                    fill: true,
-                    backgroundColor: {!! json_encode($chartType ?? 'line') !!} === 'bar' ?
-                        'rgba(13, 110, 253, 0.5)' : 'rgba(13, 110, 253, 0.1)',
-                    fill: {!! json_encode($chartType ?? 'line') !!} === 'line',
-                    tension: 0.3
-                }]
-            },
-            options: {
-                scales: {
-                    y: {
-                        beginAtZero: true
-                    }
-                }
-            }
-        });
-    </script>
+        .hover-card:hover .card-title {
+            color: #667eea;
+        }
+    </style>
 @endsection

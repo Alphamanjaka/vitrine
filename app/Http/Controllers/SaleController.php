@@ -3,18 +3,19 @@
 namespace App\Http\Controllers;
 
 use Barryvdh\DomPDF\Facade\Pdf;
-use App\Models\Product;
-use App\Models\Sale;
 use App\Services\SaleService;
+use App\Services\ProductService;
 use App\Http\Requests\StoreSaleRequest;
 
 class SaleController extends Controller
 {
     protected $saleService;
+    protected $productService;
 
-    public function __construct(SaleService $saleService)
+    public function __construct(SaleService $saleService, ProductService $productService)
     {
         $this->saleService = $saleService;
+        $this->productService = $productService;
     }
 
     /**
@@ -22,56 +23,62 @@ class SaleController extends Controller
      */
     public function create()
     {
-        $products = Product::where('quantity_stock', '>', 0)->get();
+        $products = $this->productService->getAvailableProducts();
         return view('sales.create', compact('products'));
     }
 
+    /**
+     * Store a newly created sale.
+     */
     public function store(StoreSaleRequest $request)
     {
         try {
-            // On récupère les données validées par ta Request
             $validated = $request->validated();
 
-            // Appel au service pour créer la vente, les lignes et sortir le stock
             $sale = $this->saleService->createSale(
                 $validated['products'],
                 $validated['discount'] ?? 0
             );
 
             return redirect()
-                ->route('sales.show', $sale->id) // On redirige vers le détail de la vente
+                ->route('sales.show', $sale->id)
                 ->with('success', "Vente {$sale->reference} validée avec succès !");
         } catch (\Exception $e) {
-            // En cas de stock insuffisant ou autre erreur, on revient en arrière
             return back()
-                ->withInput() // Garde les saisies du formulaire
+                ->withInput()
                 ->with('error', "Erreur lors de la vente : " . $e->getMessage());
         }
     }
+
+    /**
+     * Display all sales with statistics.
+     */
     public function index()
     {
-        // On récupère les ventes triées par la plus récente
-        $sales = \App\Models\Sale::latest()->paginate(15);
+        $sales = $this->saleService->getAllSales(15);
+        $stats = $this->saleService->getSalesStatistics();
 
-        // Calculs rapides pour un petit tableau de bord en haut de page
-        $totalRevenue = \App\Models\Sale::sum('total_net');
-        $totalDiscounts = \App\Models\Sale::sum('discount');
-
-        return view('sales.index', compact('sales', 'totalRevenue', 'totalDiscounts'));
+        return view('sales.index', array_merge(
+            compact('sales'),
+            $stats
+        ));
     }
 
+    /**
+     * Display a single sale.
+     */
     public function show($id)
     {
-        // On charge la vente avec ses items ET les produits liés aux items
-        $sale = \App\Models\Sale::with('items.product')->findOrFail($id);
+        $sale = $this->saleService->getSaleById($id);
         return view('sales.show', compact('sale'));
     }
 
+    /**
+     * Export sale as PDF.
+     */
     public function exportPdf($id)
     {
-        $sale = Sale::with('items.product')->findOrFail($id);
-
-        // On utilise une vue spécifique simplifiée pour le PDF (sans le layout Bootstrap complexe)
+        $sale = $this->saleService->getSaleById($id);
         $pdf = Pdf::loadView('sales.pdf', compact('sale'));
 
         return $pdf->download("facture_{$sale->reference}.pdf");

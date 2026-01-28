@@ -3,103 +3,95 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreProductRequest;
-use App\Models\Product;
+use App\Services\ProductService;
 use Illuminate\Http\Request;
-use App\Models\Category;
 
 class ProductController extends Controller
 {
+    protected $productService;
+
+    public function __construct(ProductService $productService)
+    {
+        $this->productService = $productService;
+    }
+
     /**
      * Display a listing of the resource.
      */
-public function index(Request $request)
-{
-    // 1. Liste des colonnes autorisées pour le tri (sécurité)
-    $sortableColumns = ['name', 'price', 'quantity_stock', 'created_at'];
+    public function index(Request $request)
+    {
+        $filters = [
+            'sort' => $request->get('sort', 'name'),
+            'order' => $request->get('order', 'asc'),
+            'search' => $request->get('search'),
+            'category' => $request->get('category'),
+            'per_page' => 15,
+        ];
 
-    // 2. Récupérer les paramètres ou mettre des valeurs par défaut
-    $sort = in_array($request->sort, $sortableColumns) ? $request->sort : 'name';
-    $order = $request->order === 'desc' ? 'desc' : 'asc';
+        $products = $this->productService->getAllProducts($filters);
+        $categories = $this->productService->getAllCategories();
 
-    // On commence la requête
-    $query = Product::with('category');
-
-    // Filtre Recherche
-    $query->when($request->search, function ($q, $search) {
-        return $q->where('name', 'like', "%{$search}%");
-    });
-
-    // Filtre Catégorie
-    $query->when($request->category, function ($q, $category_id) {
-        return $q->where('category_id', $category_id);
-    });
-    // Appliquer le tri
-    $query->orderBy($sort, $order);
-
-    // Pagination (10 produits par page)
-    // withQueryString() permet de garder les filtres quand on change de page
-    $products = $query->paginate(15)->withQueryString();
-
-    $categories = Category::all();
-
-    return view('products.index', compact('products', 'categories'));
-}
+        return view('products.index', compact('products', 'categories'));
+    }
 
     /**
      * Show the form for creating a new resource.
      */
     public function create()
     {
-        // get categories for the select dropdown
-        $categories = Category::all();
-        
+        $categories = $this->productService->getAllCategories();
         return view('products.create', compact('categories'));
     }
-
 
     /**
      * Store a newly created resource in storage.
      */
     public function store(StoreProductRequest $request)
     {
-        // if the validation fails, Laravel will automatically redirect back with errors
-        // If it passes, we can safely create the product
-
-        Product::create($request->validated()); // use mass assignment protection
+        $this->productService->createProduct($request->validated());
 
         return redirect()->route('products.index')
-            ->with('success', 'the product has been created successfully.');
+            ->with('success', 'le produit a été créé avec succès.');
     }
 
     /**
      * Display the specified resource.
      */
-    public function show(Product $product)
+    public function show(int $id)
     {
-        //
+        $product = $this->productService->getProductById($id);
+        return view('products.show', compact('product'));
     }
 
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(Product $product)
+    public function edit(int $id)
     {
-        //
+        $product = $this->productService->getProductById($id);
+        $categories = $this->productService->getAllCategories();
+        return view('products.edit', compact('product', 'categories'));
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Product $product)
+    public function update(StoreProductRequest $request, int $id)
     {
-        //
+        $this->productService->updateProduct($id, $request->validated());
+
+        return redirect()->route('products.index')
+            ->with('success', 'le produit a été modifié avec succès.');
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Product $product)
+    public function destroy(int $id)
     {
-        //
+        $this->productService->deleteProduct($id);
+
+        return redirect()->route('products.index')
+            ->with('success', 'le produit a été supprimé avec succès.');
     }
 }

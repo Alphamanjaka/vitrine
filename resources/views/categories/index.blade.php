@@ -1,6 +1,6 @@
-@extends('layouts.app')
+@extends('layouts.app-back-office')
 
-@section('title', 'Ajouter une nouvelle catégorie')
+@section('title', 'Gestion des Catégories')
 @section('content')
     <a href="{{ route('categories.create') }}" class="btn btn-primary mb-3">Ajouter une catégorie</a>
     <div class="card mb-4 shadow-sm">

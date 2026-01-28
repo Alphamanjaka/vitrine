@@ -21,6 +21,7 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'role',
     ];
 
     /**
@@ -44,5 +45,21 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    /**
+     * Check if user is back office
+     */
+    public function isBackOffice(): bool
+    {
+        return $this->role === 'back_office';
+    }
+
+    /**
+     * Check if user is front office
+     */
+    public function isFrontOffice(): bool
+    {
+        return $this->role === 'front_office';
     }
 }

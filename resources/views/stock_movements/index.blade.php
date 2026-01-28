@@ -1,4 +1,4 @@
-@extends('layouts.app')
+@extends('layouts.app-back-office')
 
 @section('content')
     <h1>Liste des Mouvements de Stock</h1>

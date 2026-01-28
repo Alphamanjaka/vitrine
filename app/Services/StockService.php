@@ -24,7 +24,7 @@ class StockService
         // check for alert stock
         if ($product->quantity_stock <= $product->alert_stock) {
             // Here you could trigger a notification, email, etc.
-            $admin= User::first(); // récupérer l'administrateur
+            $admin = User::first(); // récupérer l'administrateur
             $admin->notify(new LowStockAlert($product));
         }
 
@@ -48,5 +48,29 @@ class StockService
             'quantity' => $quantity,
             'reason' => $reason,
         ]);
+    }
+
+    /**
+     * Get all stock movements with pagination
+     */
+    public function getAllStockMovements($perPage = 15)
+    {
+        return StockMovement::with('product')->orderBy('created_at', 'desc')->paginate($perPage);
+    }
+
+    /**
+     * Get single stock movement by ID
+     */
+    public function getStockMovementById($id)
+    {
+        return StockMovement::with('product')->findOrFail($id);
+    }
+
+    /**
+     * Create a stock movement manually
+     */
+    public function createStockMovement($data)
+    {
+        return StockMovement::create($data);
     }
 }

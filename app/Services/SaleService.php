@@ -58,4 +58,32 @@ class SaleService
             return $sale;
         });
     }
+
+    /**
+     * Get all sales with pagination
+     */
+    public function getAllSales($perPage = 15)
+    {
+        return Sale::latest()->paginate($perPage);
+    }
+
+    /**
+     * Get sales statistics
+     */
+    public function getSalesStatistics()
+    {
+        return [
+            'totalRevenue' => Sale::sum('total_net'),
+            'totalDiscounts' => Sale::sum('discount'),
+            'totalSales' => Sale::count(),
+        ];
+    }
+
+    /**
+     * Get single sale by ID
+     */
+    public function getSaleById($id)
+    {
+        return Sale::with('items.product')->findOrFail($id);
+    }
 }

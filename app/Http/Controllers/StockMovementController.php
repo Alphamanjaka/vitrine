@@ -2,25 +2,27 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\StockMovement;
-use App\Models\Product;
 use App\Services\StockService;
-use Illuminate\Support\Facades\DB;
+use App\Services\ProductService;
 use Illuminate\Http\Request;
 
 class StockMovementController extends Controller
 {
     protected $stockService;
-    public function __construct(StockService $stockService)
+    protected $productService;
+
+    public function __construct(StockService $stockService, ProductService $productService)
     {
         $this->stockService = $stockService;
+        $this->productService = $productService;
     }
+
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
-        $stockMovements = StockMovement::with('product')->orderBy('created_at', 'desc')->get();
+        $stockMovements = $this->stockService->getAllStockMovements(15);
         return view('stock_movements.index', compact('stockMovements'));
     }
 
@@ -29,7 +31,8 @@ class StockMovementController extends Controller
      */
     public function create()
     {
-        //
+        $products = $this->productService->getAllProducts();
+        return view('stock_movements.create', compact('products'));
     }
 
     /**
@@ -37,65 +40,40 @@ class StockMovementController extends Controller
      */
     public function store(Request $request)
     {
-        // data validation
         $validatedData = $request->validate([
             'product_id' => 'required|exists:products,id',
-            'quantity' => 'required|integer',
-            'type' => 'required|in:addition,removal',
+            'quantity' => 'required|integer|min:1',
+            'type' => 'required|in:in,out',
             'reason' => 'nullable|string',
         ]);
-        // using transaction to ensure data integrity
-        DB::transaction(function () use ($validatedData) {
-            // Create stock movement
-            StockMovement::create($validatedData);
-            // Update product stock quantity
-            $product = Product::findOrFail($validatedData['product_id']);
 
-            // Adjust stock based on movement type
+        try {
             if ($validatedData['type'] === 'in') {
-                $product->quantity_stock += $validatedData['quantity'];
+                $this->stockService->addStock(
+                    $validatedData['product_id'],
+                    $validatedData['quantity'],
+                    $validatedData['reason'] ?? 'Ajustement manuel'
+                );
             } else {
-                // Ensure stock doesn't go negative
-                if($product->quantity_stock < $validatedData['quantity']){
-                    throw new \Exception('Insufficient stock for this removal.');
-                }
-
-                $product->quantity_stock -= $validatedData['quantity'];
+                $this->stockService->removeStock(
+                    $validatedData['product_id'],
+                    $validatedData['quantity'],
+                    $validatedData['reason'] ?? 'Ajustement manuel'
+                );
             }
-            $product->save();
-        });
-        return redirect()->back()->with('success','Stock movement created successfully.');
+
+            return redirect()->back()->with('success', 'Mouvement de stock créé avec succès.');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', $e->getMessage());
+        }
     }
 
     /**
-     * Display the specified resource.
+     * Display a single stock movement.
      */
-    public function show(StockMovement $stockMovement)
+    public function show($id)
     {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(StockMovement $stockMovement)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, StockMovement $stockMovement)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(StockMovement $stockMovement)
-    {
-        //
+        $stockMovement = $this->stockService->getStockMovementById($id);
+        return view('stock_movements.show', compact('stockMovement'));
     }
 }

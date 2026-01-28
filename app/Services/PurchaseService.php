@@ -50,18 +50,37 @@ class PurchaseService
             return $purchase;
         });
     }
-    public function updatePurchase(array $data) {}
-    public function deletePurchase(int $id) {}
-    public function getAllPurchases()
+
+    /**
+     * Get all purchases with pagination
+     */
+    public function getAllPurchases($perPage = 15)
     {
-        return Purchase::all();
+        return Purchase::latest()->paginate($perPage);
     }
-    public function getTotalPurchases()
+
+    /**
+     * Get single purchase by ID
+     */
+    public function getPurchaseById($id)
     {
-        return Purchase::sum('total_net');
+        return Purchase::with('items.product', 'supplier')->findOrFail($id);
     }
-    public function getTotalDiscounts()
+
+    /**
+     * Get purchase statistics
+     */
+    public function getPurchaseStatistics()
     {
-        return Purchase::sum('discount');
+        return [
+            'totalCost' => Purchase::sum('total_cost'),
+            'totalPurchases' => Purchase::count(),
+        ];
+    }
+    public function     updatePurchase($data)
+    {
+        $purchase = Purchase::findOrFail($data['id']);
+        $purchase->update($data);
+        return $purchase;
     }
 }

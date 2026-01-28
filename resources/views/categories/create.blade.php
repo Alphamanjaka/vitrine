@@ -1,4 +1,4 @@
-@extends('layouts.app')
+@extends('layouts.app-back-office')
 
 @section('title', 'Ajouter une nouvelle catégorie')
 
