@@ -34,7 +34,9 @@ COPY . .
 RUN composer install --optimize-autoloader --no-interaction --no-dev
 
 # 6. Copie des configurations pour Nginx et du script de démarrage
-COPY nginx.conf /etc/nginx/sites-available/default
+# Supprimer la config par défaut et mettre la vôtre
+RUN rm /etc/nginx/sites-enabled/default || true
+COPY nginx.conf /etc/nginx/conf.d/default.conf
 COPY start.sh /usr/local/bin/start.sh
 RUN chmod +x /usr/local/bin/start.sh
 
