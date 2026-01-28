@@ -2,22 +2,33 @@
 
 namespace Tests\Feature;
 
+use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 class HomePageTest extends TestCase
 {
+    use RefreshDatabase;
+
     /**
-     * Vérifie que la page d'accueil est accessible et renvoie le bon code de statut.
+     * Vérifie qu'un invité est redirigé vers la page de connexion.
      */
-    public function test_the_homepage_returns_a_successful_response(): void
+    public function test_guest_is_redirected_to_login(): void
     {
-        // Simule une requête GET sur la racine du site
         $response = $this->get('/');
 
-        // Vérifie que le serveur répond avec un code 200 (OK)
-        $response->assertStatus(200);
+        $response->assertRedirect(route('login'));
+    }
 
-        // Optionnel : Vérifie que la vue retournée est bien 'welcome'
-        $response->assertViewIs('welcome');
+    /**
+     * Vérifie qu'un utilisateur connecté est redirigé vers le tableau de bord.
+     */
+    public function test_authenticated_user_is_redirected_to_dashboard(): void
+    {
+        $user = User::factory()->create();
+
+        $response = $this->actingAs($user)->get('/');
+
+        $response->assertRedirect(route('dashboard'));
     }
 }
