@@ -43,10 +43,7 @@ Route::middleware('auth')->group(function () {
     // Routes Front Office
     Route::middleware('ensure.front.office')->prefix('sales')->name('sales.')->group(function () {
         Route::get('/dashboard', [DashboardController::class, 'frontOffice'])->name('dashboard');
-        Route::resource('', SaleController::class);
+        Route::resource('', SaleController::class); // Crée sales.index, sales.create, etc.
+        Route::get('/{sale}/pdf', [SaleController::class, 'exportPdf'])->name('pdf'); // Devient sales.pdf
     });
-
-    // Routes accessibles aux deux profils
-    Route::resource('sales', SaleController::class);
-    Route::get('/sales/{sale}/pdf', [SaleController::class, 'exportPdf'])->name('sales.pdf');
 });
