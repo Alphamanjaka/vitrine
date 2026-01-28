@@ -1,0 +1,84 @@
+name: Laravel CI
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
+
+jobs:
+  # Job 1: Linting (Vérification du style de code avec Pint)
+  lint:
+    name: "Check Code Style (Pint)"
+    runs-on: ubuntu-latest
+    steps:
+      - name: "Checkout Code"
+        uses: actions/checkout@v4
+
+      - name: "Setup PHP"
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          tools: composer:v2
+          coverage: none
+
+      - name: "Cache Composer dependencies"
+        uses: actions/cache@v4
+        with:
+          path: vendor
+          key: ${{ runner.os }}-php-${{ hashFiles('**/composer.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-php-
+
+      - name: "Install Composer Dependencies"
+        run: composer install --prefer-dist --no-progress --no-interaction
+
+      - name: "Run Laravel Pint"
+        run: vendor/bin/pint --test -v
+
+  # Job 2: Tests fonctionnels et unitaires
+  test:
+    name: "Run Feature & Unit Tests"
+    runs-on: ubuntu-latest
+    needs: lint # Ce job ne se lancera que si le 'lint' a réussi
+
+    steps:
+      - name: "Checkout Code"
+        uses: actions/checkout@v4
+
+      - name: "Setup PHP"
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          tools: composer:v2
+          coverage: none
+
+      - name: "Cache Composer dependencies"
+        uses: actions/cache@v4
+        with:
+          path: vendor
+          key: ${{ runner.os }}-php-${{ hashFiles('**/composer.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-php-
+
+      - name: "Install Composer Dependencies"
+        run: composer install --prefer-dist --no-progress --no-interaction
+
+      - name: "Prepare Database & Application"
+        run: |
+          php -r "file_exists('.env') || copy('.env.example', '.env');"
+          php artisan key:generate
+          mkdir -p database
+          touch database/database.sqlite
+
+      - name: "Run Migrations"
+        env:
+          DB_CONNECTION: sqlite
+          DB_DATABASE: database/database.sqlite
+        run: php artisan migrate --force
+
+      - name: "Execute Tests (Pest/PHPUnit)"
+        env:
+          DB_CONNECTION: sqlite
+          DB_DATABASE: database/database.sqlite
+        run: php artisan test
