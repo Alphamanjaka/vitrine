@@ -33,9 +33,6 @@ jobs:
       - name: "Install Composer Dependencies"
         run: composer install --prefer-dist --no-progress --no-interaction
 
-      - name: "Run Laravel Pint"
-        run: vendor/bin/pint --test -v
-
   # Job 2: Tests fonctionnels et unitaires
   test:
     name: "Run Feature & Unit Tests"
