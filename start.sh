@@ -22,7 +22,7 @@
 set -e
 
 # Remplace le port 8080 par le port dynamique de Railway dans le fichier nginx.conf
-sed -i "s/listen 8080;/listen ${PORT:-8080};/" /etc/nginx/conf.d/default.conf
+sed -i "s/listen 8080;/listen ${PORT};/" /etc/nginx/conf.d/default.conf
 
 # Optimisations Laravel
 php artisan config:cache
